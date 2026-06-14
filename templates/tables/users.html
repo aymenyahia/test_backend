@@ -19,6 +19,7 @@
         </tbody>
     </table>
 </div>
+
 <div id="addModal" class="modal">
     <div class="modal-content">
         <h2>Add User</h2>
@@ -27,19 +28,32 @@
             <div class="form-group"><label>Username *</label><input type="text" name="user_name" required></div>
             <div class="form-group"><label>First Name *</label><input type="text" name="name" required></div>
             <div class="form-group"><label>Last Name *</label><input type="text" name="family_name" required></div>
-            <div class="form-group"><label>Category *</label><select name="category" required>
-                <option value="">Select Category</option>
-                {% for cat in categories %}<option value="{{ cat.category_id }}">{{ cat.category_name }}</option>{% endfor %}
-            </select></div>
-            <div class="form-group"><label>Grade *</label><select name="grade" required>
-                <option value="">Select Grade</option>
-                {% for gr in grades %}<option value="{{ gr.grade_id }}">{{ gr.grade_name }}</option>{% endfor %}
-            </select></div>
+            
+            <div class="form-group">
+                <label>Category *</label>
+                <select name="category" id="categorySelect" required onchange="updateGrades()">
+                    <option value="">Select Category</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.category_id }}">{{ cat.category_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Grade *</label>
+                <select name="grade" id="gradeSelect" required disabled>
+                    <option value="">Select Category First</option>
+                </select>
+            </div>
+            
             <div class="form-group"><label>Password *</label><input type="password" name="password" required></div>
             <div class="form-group"><label>Role *</label><select name="user_role" required>
                 <option value="">Select Role</option>
-                {% for role in roles %}<option value="{{ role.user_role_id }}">{{ role.role }}</option>{% endfor %}
+                {% for role in roles %}
+                    <option value="{{ role.user_role_id }}">{{ role.role }}</option>
+                {% endfor %}
             </select></div>
+            
             <div class="form-group">
                 <label>Profile Picture</label>
                 <input type="file" name="profil_pic" accept="image/*" onchange="previewImage(this)">
@@ -48,16 +62,66 @@
             <div id="imagePreview" style="display: none; margin-bottom: 1rem;">
                 <img id="previewImg" src="" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
             </div>
+            
             <button type="submit" class="btn btn-success">Save</button>
             <button type="button" class="btn btn-primary" onclick="document.getElementById('addModal').classList.remove('active')">Cancel</button>
         </form>
     </div>
 </div>
+
+<!-- Grade data: use category_rel.category_id if category_id is None -->
+<div id="gradeData" style="display:none">
+{% for gr in grades %}
+    {% set gr_cat_id = gr.category_id if gr.category_id is not none else (gr.category_rel.category_id if gr.category_rel else '') %}
+    {% if gr_cat_id != '' %}
+    <div class="grade-item" data-cat="{{ gr_cat_id }}" data-id="{{ gr.grade_id }}" data-name="{{ gr.grade_name }}"></div>
+    {% endif %}
+{% endfor %}
+</div>
+
 <script>
+function updateGrades() {
+    var catId = String(document.getElementById('categorySelect').value);
+    var sel = document.getElementById('gradeSelect');
+    sel.innerHTML = '';
+    
+    if (!catId) {
+        sel.disabled = true;
+        sel.innerHTML = '<option value="">Select Category First</option>';
+        return;
+    }
+    
+    var allItems = document.getElementsByClassName('grade-item');
+    var matched = [];
+    
+    for (var i = 0; i < allItems.length; i++) {
+        var itemCat = String(allItems[i].getAttribute('data-cat') || '');
+        if (itemCat === catId) {
+            matched.push(allItems[i]);
+        }
+    }
+    
+    if (matched.length === 0) {
+        sel.disabled = true;
+        sel.innerHTML = '<option value="">No grades for this category</option>';
+        return;
+    }
+    
+    sel.disabled = false;
+    sel.innerHTML = '<option value="">Select Grade</option>';
+    
+    for (var j = 0; j < matched.length; j++) {
+        var opt = document.createElement('option');
+        opt.value = matched[j].getAttribute('data-id');
+        opt.textContent = matched[j].getAttribute('data-name');
+        sel.appendChild(opt);
+    }
+}
+
 function previewImage(input) {
-    const file = input.files[0];
+    var file = input.files[0];
     if (file) {
-        const reader = new FileReader();
+        var reader = new FileReader();
         reader.onload = function(e) {
             document.getElementById('previewImg').src = e.target.result;
             document.getElementById('imagePreview').style.display = 'block';

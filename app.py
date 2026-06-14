@@ -312,7 +312,7 @@ def web_add_user():
         name=request.form['name'],
         family_name=request.form['family_name'],
         category=request.form['category'],
-        grade=request.form['grade'],
+        grade=request.form.get('grade', "بدون رتبة"),
         user_name=request.form['user_name'],
         password=generate_password_hash(request.form['password']),
         profil_pic_url=profile_pic,
@@ -395,12 +395,16 @@ def web_reject_user(matricule):
 @manager_required
 def web_grades():
     grades = Grade.query.all()
-    return render_template('tables/grades.html', grades=grades)
+    categories = Category.query.all()  # ADD THIS
+    return render_template('tables/grades.html', grades=grades, categories=categories)
 
 @app.route('/web/grades/add', methods=['POST'])
 @manager_required
 def web_add_grade():
-    db.session.add(Grade(grade_name=request.form['grade_name']))
+    db.session.add(Grade(
+        grade_name=request.form['grade_name'],
+        category_id=request.form.get('category_id', 1)  # ADD THIS
+    ))
     db.session.commit()
     flash('Grade added', 'success')
     return redirect(url_for('web_grades'))

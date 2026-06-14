@@ -12,6 +12,9 @@ class Grade(db.Model):
     __tablename__ = 'grades'
     grade_id = db.Column(db.Integer, primary_key=True)
     grade_name = db.Column(db.Text, nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.category_id'), nullable=False, default=1)
+
+    category_rel = db.relationship('Category', backref='grades')
 
 class Category(db.Model):
     __tablename__ = 'categories'
@@ -24,7 +27,7 @@ class User(db.Model):
     name = db.Column(db.Text, nullable=False)
     family_name = db.Column(db.Text, nullable=False)
     category = db.Column(db.Integer, db.ForeignKey('categories.category_id'), nullable=False)
-    grade = db.Column(db.Integer, db.ForeignKey('grades.grade_id'), nullable=False)
+    grade = db.Column(db.Integer, db.ForeignKey('grades.grade_id'), nullable=True)
     user_name = db.Column(db.Text, nullable=False)
     password = db.Column(db.Text, nullable=False)
     profil_pic_url = db.Column(db.Text, nullable=False)
