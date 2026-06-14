@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Assignments - Bureau Management{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h1>🔗 Assignments</h1>
+    <button class="btn btn-primary" onclick="document.getElementById('addModal').classList.add('active')">+ Assign</button>
+</div>
+<div class="card">
+    <table>
+        <thead><tr><th>ID</th><th>User</th><th>Task</th><th>Actions</th></tr></thead>
+        <tbody>
+            {% for a in assignments %}
+            <tr><td>{{ a.assignement_id }}</td><td>{{ a.user.name if a.user else a.user_id }} {{ a.user.family_name if a.user else '' }}</td>
+                <td>{{ a.task.title if a.task else a.task_id }}</td>
+                <td><a href="{{ url_for('web_delete_assignment', id=a.assignement_id) }}" class="btn btn-danger" onclick="return confirm('Delete?')">Delete</a></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <h2>Assign User to Task</h2>
+        <form method="POST" action="{{ url_for('web_add_assignment') }}">
+            <div class="form-group"><label>User</label><select name="user_id" required>
+                {% for user in users %}<<option value="{{ user.matricule }}">{{ user.name }} {{ user.family_name }}</option>{% endfor %}
+            </select></div>
+            <div class="form-group"><label>Task</label><select name="task_id" required>
+                {% for task in tasks %}<<option value="{{ task.task_id }}">{{ task.title }}</option>{% endfor %}
+            </select></div>
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('addModal').classList.remove('active')">Cancel</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

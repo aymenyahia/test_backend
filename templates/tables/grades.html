@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Grades - Bureau Management{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h1>📈 Grades</h1>
+    <button class="btn btn-primary" onclick="document.getElementById('addModal').classList.add('active')">+ Add Grade</button>
+</div>
+<div class="card">
+    <table>
+        <thead><tr><th>ID</th><th>Name</th><th>Actions</th></tr></thead>
+        <tbody>
+            {% for grade in grades %}
+            <tr><td>{{ grade.grade_id }}</td><td>{{ grade.grade_name }}</td>
+                <td><a href="{{ url_for('web_delete_grade', id=grade.grade_id) }}" class="btn btn-danger" onclick="return confirm('Delete?')">Delete</a></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <h2>Add Grade</h2>
+        <form method="POST" action="{{ url_for('web_add_grade') }}">
+            <div class="form-group"><label>Grade Name</label><input type="text" name="grade_name" required></div>
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('addModal').classList.remove('active')">Cancel</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

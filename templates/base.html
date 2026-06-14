@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bureau Management{% endblock %}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a2e; color: #e1e1e6; min-height: 100vh; }
+        .navbar { background: #16213e; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #0f3460; }
+        .navbar-left { display: flex; align-items: center; gap: 2rem; }
+        .navbar h1 { color: #e94560; font-size: 1.5rem; }
+        .nav-links { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .nav-links a { color: #e1e1e6; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; transition: all 0.3s; font-size: 0.9rem; }
+        .nav-links a:hover { background: #0f3460; color: #e94560; }
+        .nav-links a.active { background: #e94560; color: white; }
+        .user-info { display: flex; align-items: center; gap: 1rem; }
+        .user-badge { background: #0f3460; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; }
+        .user-badge .role { color: #e94560; font-weight: bold; }
+        .btn-logout { background: #c0392b; color: white; padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; font-size: 0.85rem; transition: background 0.3s; }
+        .btn-logout:hover { background: #a93226; }
+        .container { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+        .card { background: #16213e; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #0f3460; }
+        .card h2 { color: #e94560; margin-bottom: 1rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #0f3460; }
+        th { color: #e94560; font-weight: 600; }
+        tr:hover { background: #0f3460; }
+        .btn { display: inline-block; padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; border: none; cursor: pointer; font-size: 0.9rem; transition: all 0.3s; }
+        .btn-primary { background: #e94560; color: white; }
+        .btn-primary:hover { background: #c73e54; }
+        .btn-danger { background: #c0392b; color: white; }
+        .btn-danger:hover { background: #a93226; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-success:hover { background: #219a52; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; color: #e94560; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #0f3460; background: #0f3460; color: #e1e1e6; font-size: 1rem; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #e94560; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+        .stat-card { background: #16213e; border-radius: 12px; padding: 1.5rem; text-align: center; border: 1px solid #0f3460; }
+        .stat-card h3 { color: #e94560; font-size: 2rem; margin-bottom: 0.5rem; }
+        .stat-card p { color: #a0a0a0; }
+        .alert { padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+        .alert-success { background: #27ae60; color: white; }
+        .alert-danger { background: #c0392b; color: white; }
+        .sql-editor { width: 100%; min-height: 200px; font-family: 'Courier New', monospace; background: #0f3460; color: #e1e1e6; border: 1px solid #e94560; border-radius: 8px; padding: 1rem; font-size: 1rem; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; }
+        .modal-content { background: #16213e; margin: 5% auto; padding: 2rem; width: 90%; max-width: 600px; border-radius: 12px; border: 2px solid #e94560; }
+        .modal.active { display: block; }
+        .restricted { opacity: 0.5; pointer-events: none; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <h1>🏢 Bureau Management</h1>
+            <div class="nav-links">
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                {% if session.get('user_role') == 1 %}<a href="{{ url_for('web_users') }}">Users</a>{% endif %}
+                {% if session.get('user_role') in [1, 2] %}<a href="{{ url_for('web_pending_approvals') }}">Pending Approvals</a>{% endif %}
+                <a href="{{ url_for('web_tasks') }}">Tasks</a>
+                {% if session.get('user_role') in [1, 2] %}<a href="{{ url_for('web_grades') }}">Grades</a>{% endif %}
+                {% if session.get('user_role') in [1, 2] %}<a href="{{ url_for('web_categories') }}">Categories</a>{% endif %}
+                {% if session.get('user_role') in [1, 2] %}<a href="{{ url_for('web_assignments') }}">Assignments</a>{% endif %}
+                <a href="{{ url_for('web_p2p_chats') }}">P2P Chats</a>
+                <a href="{{ url_for('web_group_chats') }}">Group Chats</a>
+                {% if session.get('user_role') == 1 %}<a href="{{ url_for('web_sql') }}">SQL</a>{% endif %}
+            </div>
+        </div>
+        <div class="user-info">
+            <a href="{{ url_for('profile') }}" style="text-decoration: none;">
+                <div class="user-badge" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <img src="{{ profile_pic if profile_pic is defined else '/static/uploads/profiles/default.png' }}" 
+                         alt="" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+                    <span>{{ session.get('user_name', 'Guest') }}</span>
+                    <span class="role">{{ session.get('user_role_name', 'Unknown') }}</span>
+                </div>
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+        </div>
+    </nav>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </div>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

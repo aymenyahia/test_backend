@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Users - Bureau Management{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h1>👥 Users</h1>
+    <button class="btn btn-primary" onclick="document.getElementById('addModal').classList.add('active')">+ Add User</button>
+</div>
+<div class="card">
+    <table>
+        <thead><tr><th>Matricule</th><th>Name</th><th>Family Name</th><th>Category</th><th>Grade</th><th>Username</th><th>Actions</th></tr></thead>
+        <tbody>
+            {% for user in users %}
+            <tr><td>{{ user.matricule }}</td><td>{{ user.name }}</td><td>{{ user.family_name }}</td>
+                <td>{{ user.category_rel.category_name if user.category_rel else user.category }}</td>
+                <td>{{ user.grade_rel.grade_name if user.grade_rel else user.grade }}</td>
+                <td>{{ user.user_name }}</td>
+                <td><a href="{{ url_for('web_delete_user', matricule=user.matricule) }}" class="btn btn-danger" onclick="return confirm('Delete this user?')">Delete</a></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <h2>Add User</h2>
+        <form method="POST" action="{{ url_for('web_add_user') }}">
+            <div class="form-group"><label>Matricule</label><input type="text" name="matricule" required></div>
+            <div class="form-group"><label>Name</label><input type="text" name="name" required></div>
+            <div class="form-group"><label>Family Name</label><input type="text" name="family_name" required></div>
+            <div class="form-group"><label>Category</label><select name="category" required>
+                <option value="">Select category</option>
+                {% for cat in categories %}<option value="{{ cat.category_id }}">{{ cat.category_name }}</option>{% endfor %}
+            </select></div>
+            <div class="form-group"><label>Grade</label><select name="grade" required>
+                <option value="">Select grade</option>
+                {% for grade in grades %}<option value="{{ grade.grade_id }}">{{ grade.grade_name }}</option>{% endfor %}
+            </select></div>
+            <div class="form-group"><label>Username</label><input type="text" name="user_name" required></div>
+            <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+            <div class="form-group"><label>Profile Pic URL</label><input type="text" name="profil_pic_url" value=""></div>
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('addModal').classList.remove('active')">Cancel</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

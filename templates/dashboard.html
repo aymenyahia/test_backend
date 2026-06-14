@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Bureau Management{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 2rem;">📊 Dashboard</h1>
+<div class="grid">
+    <div class="stat-card"><h3>{{ stats.users_count }}</h3><p>👥 Users</p></div>
+    <div class="stat-card"><h3>{{ stats.tasks_count }}</h3><p>✅ Tasks</p></div>
+    <div class="stat-card"><h3>{{ stats.grades_count }}</h3><p>📈 Grades</p></div>
+    <div class="stat-card"><h3>{{ stats.categories_count }}</h3><p>📁 Categories</p></div>
+    <div class="stat-card"><h3>{{ stats.p2p_chats_count }}</h3><p>💬 P2P Chats</p></div>
+    <div class="stat-card"><h3>{{ stats.group_chats_count }}</h3><p>👥 Group Chats</p></div>
+</div>
+<div class="card" style="margin-top: 2rem;">
+    <h2>🔌 API Endpoints</h2>
+    <table>
+        <tr><th>Resource</th><th>GET All</th><th>GET One</th><th>POST</th><th>PUT</th><th>DELETE</th></tr>
+        <tr><td>Grades</td><td><code>GET /api/grades</code></td><td><code>GET /api/grades/&lt;id&gt;</code></td><td><code>POST /api/grades</code></td><td><code>PUT /api/grades/&lt;id&gt;</code></td><td><code>DELETE /api/grades/&lt;id&gt;</code></td></tr>
+        <tr><td>Categories</td><td><code>GET /api/categories</code></td><td><code>GET /api/categories/&lt;id&gt;</code></td><td><code>POST /api/categories</code></td><td><code>PUT /api/categories/&lt;id&gt;</code></td><td><code>DELETE /api/categories/&lt;id&gt;</code></td></tr>
+        <tr><td>Users</td><td><code>GET /api/users</code></td><td><code>GET /api/users/&lt;matricule&gt;</code></td><td><code>POST /api/users</code></td><td><code>PUT /api/users/&lt;matricule&gt;</code></td><td><code>DELETE /api/users/&lt;matricule&gt;</code></td></tr>
+        <tr><td>Tasks</td><td><code>GET /api/tasks</code></td><td><code>GET /api/tasks/&lt;id&gt;</code></td><td><code>POST /api/tasks</code></td><td><code>PUT /api/tasks/&lt;id&gt;</code></td><td><code>DELETE /api/tasks/&lt;id&gt;</code></td></tr>
+        <tr><td>Assignments</td><td><code>GET /api/assignments</code></td><td><code>GET /api/assignments/&lt;id&gt;</code></td><td><code>POST /api/assignments</code></td><td>-</td><td><code>DELETE /api/assignments/&lt;id&gt;</code></td></tr>
+        <tr><td>P2P Chats</td><td><code>GET /api/p2p-chats</code></td><td>-</td><td><code>POST /api/p2p-chats</code></td><td>-</td><td>-</td></tr>
+        <tr><td>P2P Messages</td><td><code>GET /api/p2p-chats/&lt;id&gt;/messages</code></td><td>-</td><td><code>POST /api/p2p-chats/&lt;id&gt;/messages</code></td><td>-</td><td>-</td></tr>
+        <tr><td>Group Chats</td><td><code>GET /api/group-chats</code></td><td>-</td><td><code>POST /api/group-chats</code></td><td>-</td><td>-</td></tr>
+        <tr><td>SQL</td><td colspan="5"><code>POST /api/sql</code> body: {"query": "SELECT..."}</td></tr>
+        <tr><td>Search</td><td colspan="5"><code>GET /api/search/&lt;table&gt;?q=term</code></td></tr>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}SQL Executor - Bureau Management{% endblock %}
+{% block content %}
+<h1>🔍 SQL Executor</h1>
+<div class="card">
+    <form method="POST" action="{{ url_for('web_sql_execute') }}">
+        <div class="form-group"><label>SQL Query</label><textarea name="query" class="sql-editor" placeholder="SELECT * FROM users WHERE name LIKE '%John%';">{{ query or '' }}</textarea></div>
+        <button type="submit" class="btn btn-success">Execute</button>
+    </form>
+</div>
+{% if columns %}
+<div class="card">
+    <h2>Results ({{ rows|length }} rows)</h2>
+    <table>
+        <thead><tr>{% for col in columns %}<<th>{{ col }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for row in rows %}<<tr>{% for col in columns %}<<td>{{ row[col] }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

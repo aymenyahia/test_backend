@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Bureau Management</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #e1e1e6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .signup-container {
+            background: #16213e;
+            padding: 2.5rem;
+            border-radius: 16px;
+            border: 2px solid #0f3460;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .signup-container h1 {
+            color: #e94560;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        .signup-container p.subtitle {
+            text-align: center;
+            color: #a0a0a0;
+            margin-bottom: 2rem;
+        }
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #e94560;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 10px;
+            border: 1px solid #0f3460;
+            background: #0f3460;
+            color: #e1e1e6;
+            font-size: 1rem;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .file-input-wrapper {
+            position: relative;
+        }
+        .file-input-wrapper input[type="file"] {
+            padding: 0.5rem;
+        }
+        .file-hint {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 0.25rem;
+        }
+        .profile-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #e94560;
+            margin-top: 0.5rem;
+            display: none;
+        }
+        .btn-signup {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 10px;
+            border: none;
+            background: #27ae60;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 1rem;
+        }
+        .btn-signup:hover {
+            background: #219a52;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #a0a0a0;
+        }
+        .login-link a {
+            color: #e94560;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .alert-danger { background: #c0392b; color: white; }
+        .alert-success { background: #27ae60; color: white; }
+        .logo {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="logo">🏢</div>
+        <h1>Create Account</h1>
+        <p class="subtitle">Join Bureau Management</p>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'warning' if category == 'info' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" action="{{ url_for('signup') }}" enctype="multipart/form-data">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="matricule">Matricule *</label>
+                    <input type="text" id="matricule" name="matricule" required placeholder="e.g. M001">
+                </div>
+                <div class="form-group">
+                    <label for="user_name">Username *</label>
+                    <input type="text" id="user_name" name="user_name" required placeholder="Choose a username">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name">First Name *</label>
+                    <input type="text" id="name" name="name" required placeholder="Your first name">
+                </div>
+                <div class="form-group">
+                    <label for="family_name">Family Name *</label>
+                    <input type="text" id="family_name" name="family_name" required placeholder="Your family name">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="category">Category *</label>
+                    <select id="category" name="category" required>
+                        <option value="">Select category</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.category_id }}">{{ cat.category_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="grade">Grade *</label>
+                    <select id="grade" name="grade" required>
+                        <option value="">Select grade</option>
+                        {% for grade in grades %}
+                        <option value="{{ grade.grade_id }}">{{ grade.grade_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password">Password *</label>
+                    <input type="password" id="password" name="password" required placeholder="Create password">
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password">Confirm Password *</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required placeholder="Repeat password">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="profile_pic">Profile Picture (optional)</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="profile_pic" name="profile_pic" accept="image/*" onchange="previewImage(this)">
+                </div>
+                <p class="file-hint">Supported: PNG, JPG, JPEG, GIF, WEBP (max 16MB)</p>
+                <img id="preview" class="profile-preview" alt="Preview">
+            </div>
+            
+            <button type="submit" class="btn-signup">Create Account</button>
+        </form>
+        
+        <div class="login-link">
+            Already have an account? <a href="{{ url_for('login') }}">Log in</a>
+        </div>
+    </div>
+    
+    <script>
+        function previewImage(input) {
+            const preview = document.getElementById('preview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}P2P Chats - Bureau Management{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h1>💬 P2P Chats</h1>
+    <button class="btn btn-primary" onclick="document.getElementById('addModal').classList.add('active')">+ New Chat</button>
+</div>
+<div class="card">
+    <table>
+        <thead><tr><th>ID</th><th>First User</th><th>Second User</th><th>Created</th><th>Actions</th></tr></thead>
+        <tbody>
+            {% for chat in chats %}
+            <tr><td>{{ chat.p2p_id }}</td>
+                <td>{{ chat.first_user_rel.name if chat.first_user_rel else chat.first_user }} {{ chat.first_user_rel.family_name if chat.first_user_rel else '' }}</td>
+                <td>{{ chat.second_user_rel.name if chat.second_user_rel else chat.second_user }} {{ chat.second_user_rel.family_name if chat.second_user_rel else '' }}</td>
+                <td>{{ chat.created_at.strftime('%Y-%m-%d %H:%M') if chat.created_at else '-' }}</td>
+                <td><a href="{{ url_for('api_p2p_messages', id=chat.p2p_id) }}" class="btn btn-primary">Messages</a></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <h2>New P2P Chat</h2>
+        <form method="POST" action="{{ url_for('web_add_p2p_chat') }}">
+            <div class="form-group"><label>First User</label><select name="first_user" required>
+                {% for user in users %}<<option value="{{ user.matricule }}">{{ user.name }} {{ user.family_name }}</option>{% endfor %}
+            </select></div>
+            <div class="form-group"><label>Second User</label><select name="second_user" required>
+                {% for user in users %}<<option value="{{ user.matricule }}">{{ user.name }} {{ user.family_name }}</option>{% endfor %}
+            </select></div>
+            <button type="submit" class="btn btn-success">Create</button>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('addModal').classList.remove('active')">Cancel</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

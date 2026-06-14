@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Group Chats - Bureau Management{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h1>👥 Group Chats</h1>
+    <button class="btn btn-primary" onclick="document.getElementById('addModal').classList.add('active')">+ New Group</button>
+</div>
+<div class="card">
+    <table>
+        <thead><tr><th>ID</th><th>Created</th><th>Linked Task</th><th>Actions</th></tr></thead>
+        <tbody>
+            {% for chat in chats %}
+            <tr><td>{{ chat.group_chat_id }}</td>
+                <td>{{ chat.created_at.strftime('%Y-%m-%d %H:%M') if chat.created_at else '-' }}</td>
+                <td>{{ chat.task.title if chat.task else 'None' }}</td>
+                <td><a href="{{ url_for('api_group_messages', id=chat.group_chat_id) }}" class="btn btn-primary">Messages</a></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <h2>New Group Chat</h2>
+        <form method="POST" action="{{ url_for('web_add_group_chat') }}">
+            <div class="form-group"><label>Linked Task (optional)</label><select name="task_id">
+                <option value="">None</option>
+                {% for task in tasks %}<<option value="{{ task.task_id }}">{{ task.title }}</option>{% endfor %}
+            </select></div>
+            <div class="form-group"><label>Profile Pic URL</label><input type="text" name="profil_pic_url" value=""></div>
+            <button type="submit" class="btn btn-success">Create</button>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('addModal').classList.remove('active')">Cancel</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

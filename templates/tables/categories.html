@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Categories - Bureau Management{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h1>📁 Categories</h1>
+    <button class="btn btn-primary" onclick="document.getElementById('addModal').classList.add('active')">+ Add Category</button>
+</div>
+<div class="card">
+    <table>
+        <thead><tr><th>ID</th><th>Name</th><th>Actions</th></tr></thead>
+        <tbody>
+            {% for cat in categories %}
+            <tr><td>{{ cat.category_id }}</td><td>{{ cat.category_name }}</td>
+                <td><a href="{{ url_for('web_delete_category', id=cat.category_id) }}" class="btn btn-danger" onclick="return confirm('Delete?')">Delete</a></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <h2>Add Category</h2>
+        <form method="POST" action="{{ url_for('web_add_category') }}">
+            <div class="form-group"><label>Category Name</label><input type="text" name="category_name" required></div>
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('addModal').classList.remove('active')">Cancel</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
