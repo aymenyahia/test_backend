@@ -300,19 +300,24 @@ def web_users():
 @admin_required
 def web_add_user():
     profile_pic = 'default.png'
-    if 'profil_pic' in request.files:
+    if 'profil_pic' in request.files:  # Note: profil_pic (with 'l')
         file = request.files['profil_pic']
-        if file.filename:
+        if file and file.filename:  # Check file exists and has name
             saved = save_profile_picture(file)
-            if saved: profile_pic = saved
+            if saved: 
+                profile_pic = saved
     
     db.session.add(User(
-        matricule=request.form['matricule'], name=request.form['name'],
-        family_name=request.form['family_name'], category=request.form['category'],
-        grade=request.form['grade'], user_name=request.form['user_name'],
+        matricule=request.form['matricule'],
+        name=request.form['name'],
+        family_name=request.form['family_name'],
+        category=request.form['category'],
+        grade=request.form['grade'],
+        user_name=request.form['user_name'],
         password=generate_password_hash(request.form['password']),
         profil_pic_url=profile_pic,
-        user_role=request.form.get('user_role', ROLE_USER)
+        user_role=request.form.get('user_role', ROLE_USER),
+        is_approved=True  # Admin-added users are automatically approved
     ))
     db.session.commit()
     flash('User added', 'success')

@@ -22,24 +22,50 @@
 <div id="addModal" class="modal">
     <div class="modal-content">
         <h2>Add User</h2>
-        <form method="POST" action="{{ url_for('web_add_user') }}">
-            <div class="form-group"><label>Matricule</label><input type="text" name="matricule" required></div>
-            <div class="form-group"><label>Name</label><input type="text" name="name" required></div>
-            <div class="form-group"><label>Family Name</label><input type="text" name="family_name" required></div>
-            <div class="form-group"><label>Category</label><select name="category" required>
-                <option value="">Select category</option>
+        <form method="POST" action="{{ url_for('web_add_user') }}" enctype="multipart/form-data">
+            <div class="form-group"><label>Matricule *</label><input type="text" name="matricule" required></div>
+            <div class="form-group"><label>Username *</label><input type="text" name="user_name" required></div>
+            <div class="form-group"><label>First Name *</label><input type="text" name="name" required></div>
+            <div class="form-group"><label>Last Name *</label><input type="text" name="family_name" required></div>
+            <div class="form-group"><label>Category *</label><select name="category" required>
+                <option value="">Select Category</option>
                 {% for cat in categories %}<option value="{{ cat.category_id }}">{{ cat.category_name }}</option>{% endfor %}
             </select></div>
-            <div class="form-group"><label>Grade</label><select name="grade" required>
-                <option value="">Select grade</option>
-                {% for grade in grades %}<option value="{{ grade.grade_id }}">{{ grade.grade_name }}</option>{% endfor %}
+            <div class="form-group"><label>Grade *</label><select name="grade" required>
+                <option value="">Select Grade</option>
+                {% for gr in grades %}<option value="{{ gr.grade_id }}">{{ gr.grade_name }}</option>{% endfor %}
             </select></div>
-            <div class="form-group"><label>Username</label><input type="text" name="user_name" required></div>
-            <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
-            <div class="form-group"><label>Profile Pic URL</label><input type="text" name="profil_pic_url" value=""></div>
+            <div class="form-group"><label>Password *</label><input type="password" name="password" required></div>
+            <div class="form-group"><label>Role *</label><select name="user_role" required>
+                <option value="">Select Role</option>
+                {% for role in roles %}<option value="{{ role.user_role_id }}">{{ role.role }}</option>{% endfor %}
+            </select></div>
+            <div class="form-group">
+                <label>Profile Picture</label>
+                <input type="file" name="profil_pic" accept="image/*" onchange="previewImage(this)">
+                <small style="color: #a0a0a0;">Accepted formats: JPG, PNG, GIF (Max 5MB)</small>
+            </div>
+            <div id="imagePreview" style="display: none; margin-bottom: 1rem;">
+                <img id="previewImg" src="" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+            </div>
             <button type="submit" class="btn btn-success">Save</button>
             <button type="button" class="btn btn-primary" onclick="document.getElementById('addModal').classList.remove('active')">Cancel</button>
         </form>
     </div>
 </div>
+<script>
+function previewImage(input) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('imagePreview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        document.getElementById('imagePreview').style.display = 'none';
+    }
+}
+</script>
 {% endblock %}
