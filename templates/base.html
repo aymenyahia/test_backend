@@ -58,11 +58,11 @@
             <h1>🏢 Bureau Management</h1>
             <div class="nav-links">
                 <a href="{{ url_for('dashboard') }}">Dashboard</a>
-                {% if session.get('user_role') == 1 %}<a href="{{ url_for('web_users') }}">Users</a>{% endif %}
+                {% if session.get('user_role') in [1, 2] %}<a href="{{ url_for('web_users') }}">Users</a>{% endif %}
                 {% if session.get('user_role') in [1, 2] %}<a href="{{ url_for('web_pending_approvals') }}">Pending Approvals</a>{% endif %}
                 <a href="{{ url_for('web_tasks') }}">Tasks</a>
-                {% if session.get('user_role') in [1, 2] %}<a href="{{ url_for('web_grades') }}">Grades</a>{% endif %}
-                {% if session.get('user_role') in [1, 2] %}<a href="{{ url_for('web_categories') }}">Categories</a>{% endif %}
+                {% if session.get('user_role') == 1 %}<a href="{{ url_for('web_grades') }}">Grades</a>{% endif %}
+                {% if session.get('user_role') == 1 %}<a href="{{ url_for('web_categories') }}">Categories</a>{% endif %}
                 {% if session.get('user_role') in [1, 2] %}<a href="{{ url_for('web_assignments') }}">Assignments</a>{% endif %}
                 <a href="{{ url_for('web_p2p_chats') }}">P2P Chats</a>
                 <a href="{{ url_for('web_group_chats') }}">Group Chats</a>

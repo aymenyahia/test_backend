@@ -7,19 +7,31 @@
 </div>
 <div class="card">
     <table>
-        <thead><tr><th>Matricule</th><th>Name</th><th>Family Name</th><th>Category</th><th>Grade</th><th>Username</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Matricule</th><th>Name</th><th>Family Name</th><th>Category</th><th>Grade</th><th>Role</th><th>Actions</th></tr></thead>
         <tbody>
             {% for user in users %}
-            <tr><td>{{ user.matricule }}</td><td>{{ user.name }}</td><td>{{ user.family_name }}</td>
+            <tr>
+                <td>{{ user.matricule }}</td>
+                <td>{{ user.name }}</td>
+                <td>{{ user.family_name }}</td>
                 <td>{{ user.category_rel.category_name if user.category_rel else user.category }}</td>
                 <td>{{ user.grade_rel.grade_name if user.grade_rel else user.grade }}</td>
-                <td>{{ user.user_name }}</td>
-                <td><a href="{{ url_for('web_delete_user', matricule=user.matricule) }}" class="btn btn-danger" onclick="return confirm('Delete this user?')">Delete</a></td></tr>
+                <td>{{ user.role_rel.role if user.role_rel else 'Unknown' }}</td>
+                <td>
+                    {% set current_role = session.get('user_role', 3) %}
+                    {% set target_role = user.user_role %}
+                    <a href="{{ url_for('web_delete_user', matricule=user.matricule) }}" class="btn btn-danger" onclick="return confirm('Delete this user?')">Delete</a>
+                    {% if current_role <= target_role %}
+                    <button class="btn btn-success" onclick="openEditModal('{{ user.matricule }}', '{{ user.name }}', '{{ user.family_name }}', '{{ user.category }}', '{{ user.grade }}', '{{ user.user_role }}')">Edit</button>
+                    {% endif %}
+                </td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
+<!-- ADD USER MODAL -->
 <div id="addModal" class="modal">
     <div class="modal-content">
         <h2>Add User</h2>
@@ -47,12 +59,17 @@
             </div>
             
             <div class="form-group"><label>Password *</label><input type="password" name="password" required></div>
-            <div class="form-group"><label>Role *</label><select name="user_role" required>
-                <option value="">Select Role</option>
-                {% for role in roles %}
-                    <option value="{{ role.user_role_id }}">{{ role.role }}</option>
-                {% endfor %}
-            </select></div>
+            <div class="form-group"><label>Role *</label>
+                <select name="user_role" required>
+                    <option value="">Select Role</option>
+                    {% set current_role = session.get('user_role', 3) %}
+                    {% for role in roles %}
+                        {% if role.user_role_id >= current_role %}
+                        <option value="{{ role.user_role_id }}">{{ role.role }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
             
             <div class="form-group">
                 <label>Profile Picture</label>
@@ -69,7 +86,52 @@
     </div>
 </div>
 
-<!-- Grade data: use category_rel.category_id if category_id is None -->
+<!-- EDIT USER MODAL -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h2>Edit User</h2>
+        <form method="POST" action="{{ url_for('web_edit_user') }}">
+            <input type="hidden" name="matricule" id="editMatricule">
+            <div class="form-group"><label>First Name *</label><input type="text" name="name" id="editName" required></div>
+            <div class="form-group"><label>Last Name *</label><input type="text" name="family_name" id="editFamilyName" required></div>
+            
+            <div class="form-group">
+                <label>Category *</label>
+                <select name="category" id="editCategory" required onchange="updateEditGrades()">
+                    <option value="">Select Category</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.category_id }}">{{ cat.category_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Grade *</label>
+                <select name="grade" id="editGrade" required disabled>
+                    <option value="">Select Category First</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Role *</label>
+                <select name="user_role" id="editRole" required>
+                    <option value="">Select Role</option>
+                    {% set current_role = session.get('user_role', 3) %}
+                    {% for role in roles %}
+                        {% if role.user_role_id >= current_role %}
+                        <option value="{{ role.user_role_id }}">{{ role.role }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-success">Update</button>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('editModal').classList.remove('active')">Cancel</button>
+        </form>
+    </div>
+</div>
+
+<!-- Grade data lookup -->
 <div id="gradeData" style="display:none">
 {% for gr in grades %}
     {% set gr_cat_id = gr.category_id if gr.category_id is not none else (gr.category_rel.category_id if gr.category_rel else '') %}
@@ -80,9 +142,35 @@
 </div>
 
 <script>
+function openEditModal(matricule, name, familyName, category, grade, role) {
+    document.getElementById('editMatricule').value = matricule;
+    document.getElementById('editName').value = name;
+    document.getElementById('editFamilyName').value = familyName;
+    document.getElementById('editCategory').value = category;
+    document.getElementById('editRole').value = role;
+    
+    updateEditGrades();
+    
+    setTimeout(function() {
+        document.getElementById('editGrade').value = grade;
+    }, 10);
+    
+    document.getElementById('editModal').classList.add('active');
+}
+
 function updateGrades() {
     var catId = String(document.getElementById('categorySelect').value);
     var sel = document.getElementById('gradeSelect');
+    populateGrades(catId, sel);
+}
+
+function updateEditGrades() {
+    var catId = String(document.getElementById('editCategory').value);
+    var sel = document.getElementById('editGrade');
+    populateGrades(catId, sel);
+}
+
+function populateGrades(catId, sel) {
     sel.innerHTML = '';
     
     if (!catId) {

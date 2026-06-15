@@ -29,6 +29,17 @@ def inject_pending_approvals_count():
         return UserApprovalRequest.query.count()
     return dict(get_pending_approvals_count=get_pending_approvals_count)
 
+@app.context_processor
+def inject_user_profile_pic():
+    """Make current user's profile picture available in all templates"""
+    def get_user_profile_pic():
+        if 'user_matricule' in session:
+            user = User.query.get(session['user_matricule'])
+            if user:
+                return get_profile_picture_url(user)
+        return '/static/uploads/profiles/default.png'
+    return dict(profile_pic=get_user_profile_pic())
+
 # ============================================================
 # LOGIN / AUTH ROUTES
 # ============================================================
@@ -288,7 +299,7 @@ def dashboard():
 
 # --- USERS (Admin only) ---
 @app.route('/web/users')
-@admin_required
+@manager_required
 def web_users():
     users = User.query.all()
     grades = Grade.query.all()
@@ -297,7 +308,7 @@ def web_users():
     return render_template('tables/users.html', users=users, grades=grades, categories=categories, roles=roles)
 
 @app.route('/web/users/add', methods=['POST'])
-@admin_required
+@manager_required
 def web_add_user():
     profile_pic = 'default.png'
     if 'profil_pic' in request.files:  # Note: profil_pic (with 'l')
@@ -321,6 +332,39 @@ def web_add_user():
     ))
     db.session.commit()
     flash('User added', 'success')
+    return redirect(url_for('web_users'))
+
+@app.route('/web/users/edit', methods=['POST'])
+@manager_required
+def web_edit_user():
+    matricule = request.form['matricule']
+    user = User.query.get_or_404(matricule)
+    
+    current_role = session.get('user_role', ROLE_USER)
+    target_role = user.user_role
+    
+    # Can edit same role or lower (higher number = lower privilege)
+    if current_role > target_role:
+        flash('You cannot modify this user', 'danger')
+        return redirect(url_for('web_users'))
+    
+    # Update allowed fields only
+    user.name = request.form.get('name', user.name)
+    user.family_name = request.form.get('family_name', user.family_name)
+    user.category = request.form.get('category', user.category)
+    user.grade = request.form.get('grade', user.grade)
+    
+    # Role change: can only assign same role or lower
+    new_role = request.form.get('user_role')
+    if new_role:
+        new_role_int = int(new_role)
+        if new_role_int < current_role:
+            flash('You cannot assign a higher privilege role', 'danger')
+            return redirect(url_for('web_users'))
+        user.user_role = new_role_int
+    
+    db.session.commit()
+    flash('User updated successfully', 'success')
     return redirect(url_for('web_users'))
 
 @app.route('/web/users/delete/<matricule>')

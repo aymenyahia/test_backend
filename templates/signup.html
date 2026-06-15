@@ -135,9 +135,8 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ 'warning' if category == 'info' else category }} alert-dismissible fade show" role="alert">
+                    <div class="alert alert-{{ 'warning' if category == 'info' else category }}">
                         {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 {% endfor %}
             {% endif %}
@@ -169,7 +168,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="category">Category *</label>
-                    <select id="category" name="category" required>
+                    <select id="category" name="category" required onchange="updateGrades()">
                         <option value="">Select category</option>
                         {% for cat in categories %}
                         <option value="{{ cat.category_id }}">{{ cat.category_name }}</option>
@@ -178,11 +177,8 @@
                 </div>
                 <div class="form-group">
                     <label for="grade">Grade *</label>
-                    <select id="grade" name="grade" required>
-                        <option value="">Select grade</option>
-                        {% for grade in grades %}
-                        <option value="{{ grade.grade_id }}">{{ grade.grade_name }}</option>
-                        {% endfor %}
+                    <select id="grade" name="grade" required disabled>
+                        <option value="">Select category first</option>
                     </select>
                 </div>
             </div>
@@ -214,12 +210,60 @@
             Already have an account? <a href="{{ url_for('login') }}">Log in</a>
         </div>
     </div>
+
+    <!-- Grade data lookup -->
+    <div id="gradeData" style="display:none">
+    {% for gr in grades %}
+        {% set gr_cat_id = gr.category_id if gr.category_id is not none else (gr.category_rel.category_id if gr.category_rel else '') %}
+        {% if gr_cat_id != '' %}
+        <div class="grade-item" data-cat="{{ gr_cat_id }}" data-id="{{ gr.grade_id }}" data-name="{{ gr.grade_name }}"></div>
+        {% endif %}
+    {% endfor %}
+    </div>
     
     <script>
+        function updateGrades() {
+            var catId = String(document.getElementById('category').value);
+            var sel = document.getElementById('grade');
+            sel.innerHTML = '';
+            
+            if (!catId) {
+                sel.disabled = true;
+                sel.innerHTML = '<option value="">Select category first</option>';
+                return;
+            }
+            
+            var allItems = document.getElementsByClassName('grade-item');
+            var matched = [];
+            
+            for (var i = 0; i < allItems.length; i++) {
+                var itemCat = String(allItems[i].getAttribute('data-cat') || '');
+                if (itemCat === catId) {
+                    matched.push(allItems[i]);
+                }
+            }
+            
+            if (matched.length === 0) {
+                sel.disabled = true;
+                sel.innerHTML = '<option value="">No grades for this category</option>';
+                return;
+            }
+            
+            sel.disabled = false;
+            sel.innerHTML = '<option value="">Select grade</option>';
+            
+            for (var j = 0; j < matched.length; j++) {
+                var opt = document.createElement('option');
+                opt.value = matched[j].getAttribute('data-id');
+                opt.textContent = matched[j].getAttribute('data-name');
+                sel.appendChild(opt);
+            }
+        }
+
         function previewImage(input) {
-            const preview = document.getElementById('preview');
+            var preview = document.getElementById('preview');
             if (input.files && input.files[0]) {
-                const reader = new FileReader();
+                var reader = new FileReader();
                 reader.onload = function(e) {
                     preview.src = e.target.result;
                     preview.style.display = 'block';
