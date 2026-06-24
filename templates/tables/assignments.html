@@ -1,6 +1,46 @@
 {% extends "base.html" %}
 {% block title %}Assignments - Bureau Management{% endblock %}
 {% block content %}
+<style>
+.user-search-wrapper {
+    position: relative;
+}
+.user-search-input {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid #0f3460;
+    background: #0f3460;
+    color: #e1e1e6;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+.user-search-input::placeholder {
+    color: #a0a0a0;
+}
+.user-select {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid #0f3460;
+    background: #0f3460;
+    color: #e1e1e6;
+    font-size: 1rem;
+}
+.user-select option {
+    padding: 0.5rem;
+}
+.state-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+</style>
+
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
     <h1>🔗 Assignments</h1>
     <button class="btn btn-primary" onclick="document.getElementById('addModal').classList.add('active')">+ Assign</button>
@@ -10,26 +50,151 @@
         <thead><tr><th>ID</th><th>User</th><th>Task</th><th>Actions</th></tr></thead>
         <tbody>
             {% for a in assignments %}
-            <tr><td>{{ a.assignement_id }}</td><td>{{ a.user.name if a.user else a.user_id }} {{ a.user.family_name if a.user else '' }}</td>
+            <tr>
+                <td>{{ a.assignement_id }}</td>
+                <td>{{ a.user.name if a.user else a.user_id }} {{ a.user.family_name if a.user else '' }}</td>
                 <td>{{ a.task.title if a.task else a.task_id }}</td>
-                <td><a href="{{ url_for('web_delete_assignment', id=a.assignement_id) }}" class="btn btn-danger" onclick="return confirm('Delete?')">Delete</a></td></tr>
+                <td><a href="{{ url_for('web_delete_assignment', id=a.assignement_id) }}" class="btn btn-danger" onclick="return confirm('Delete?')">Delete</a></td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
+<!-- Hidden state color data -->
+<div style="display:none">
+    {% for state in states %}
+    <div class="state-color-data" data-id="{{ state.task_state_id }}" data-color="{{ state.color }}"></div>
+    {% endfor %}
+</div>
+
+<!-- Hidden task data for filtering -->
+<div style="display:none">
+    {% for task in tasks %}
+    <div class="task-data" 
+         data-id="{{ task.task_id }}" 
+         data-title="{{ task.title.lower() }}" 
+         data-state="{{ task.state }}">{{ task.title }}</div>
+    {% endfor %}
+</div>
+
 <div id="addModal" class="modal">
     <div class="modal-content">
         <h2>Assign User to Task</h2>
         <form method="POST" action="{{ url_for('web_add_assignment') }}">
-            <div class="form-group"><label>User</label><select name="user_id" required>
-                {% for user in users %}<<option value="{{ user.matricule }}">{{ user.name }} {{ user.family_name }}</option>{% endfor %}
-            </select></div>
-            <div class="form-group"><label>Task</label><select name="task_id" required>
-                {% for task in tasks %}<<option value="{{ task.task_id }}">{{ task.title }}</option>{% endfor %}
-            </select></div>
+            <div class="form-group">
+                <label>Search Task</label>
+                <input type="text" class="user-search-input" id="taskSearch" placeholder="Search by title..." onkeyup="filterTaskSelect()">
+            </div>
+            
+            <div class="form-group">
+                <label>Filter by State</label>
+                <select id="taskStateFilter" onchange="filterTaskSelect()" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #0f3460; background: #0f3460; color: #e1e1e6; font-size: 1rem;">
+                    <option value="">All States</option>
+                    {% for state in states %}
+                    <option value="{{ state.task_state_id }}">{{ state.state }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Task *</label>
+                <select name="task_id" id="taskSelect" class="user-select" required>
+                    <option value="">Select Task</option>
+                    {% set current_matricule = session.get('user_matricule') %}
+                    {% for task in tasks %}
+                        {% if task.creater == current_matricule %}
+                        <option value="{{ task.task_id }}" 
+                                data-title="{{ task.title.lower() }}" 
+                                data-state="{{ task.state }}">
+                            {{ task.title }}
+                        </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>User *</label>
+                <div class="user-search-wrapper">
+                    <input type="text" class="user-search-input" id="userSearch" placeholder="Search by name or matricule..." onkeyup="filterUsers()">
+                    <select name="user_id" id="userSelect" class="user-select" required>
+                        <option value="">Select User</option>
+                        {% for user in users %}
+                        <option value="{{ user.matricule }}" data-search="{{ user.matricule.lower() }} {{ user.name.lower() }} {{ user.family_name.lower() }}">{{ user.matricule }} - {{ user.name }} {{ user.family_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
             <button type="submit" class="btn btn-success">Save</button>
             <button type="button" class="btn btn-primary" onclick="document.getElementById('addModal').classList.remove('active')">Cancel</button>
         </form>
     </div>
 </div>
+
+<script>
+// Build state color lookup from hidden HTML elements
+var stateColors = {};
+var colorData = document.getElementsByClassName('state-color-data');
+for (var i = 0; i < colorData.length; i++) {
+    var id = colorData[i].getAttribute('data-id');
+    var color = colorData[i].getAttribute('data-color');
+    stateColors[id] = color;
+}
+
+function filterTaskSelect() {
+    var searchTerm = document.getElementById('taskSearch').value.toLowerCase();
+    var stateFilter = document.getElementById('taskStateFilter').value;
+    var select = document.getElementById('taskSelect');
+    var options = select.getElementsByTagName('option');
+    
+    for (var i = 0; i < options.length; i++) {
+        if (i === 0) {
+            options[i].style.display = '';
+            continue;
+        }
+        
+        var title = options[i].getAttribute('data-title') || '';
+        var state = options[i].getAttribute('data-state') || '';
+        
+        var matchTitle = searchTerm === '' || title.indexOf(searchTerm) !== -1;
+        var matchState = stateFilter === '' || state === stateFilter;
+        
+        if (matchTitle && matchState) {
+            options[i].style.display = '';
+        } else {
+            options[i].style.display = 'none';
+        }
+    }
+    
+    // Reset selection if hidden
+    var selected = select.options[select.selectedIndex];
+    if (selected && selected.style.display === 'none') {
+        select.selectedIndex = 0;
+    }
+}
+
+function filterUsers() {
+    var searchTerm = document.getElementById('userSearch').value.toLowerCase();
+    var select = document.getElementById('userSelect');
+    var options = select.getElementsByTagName('option');
+    
+    for (var i = 0; i < options.length; i++) {
+        var searchData = options[i].getAttribute('data-search') || '';
+        if (i === 0) {
+            options[i].style.display = '';
+        } else if (searchTerm === '' || searchData.indexOf(searchTerm) !== -1) {
+            options[i].style.display = '';
+        } else {
+            options[i].style.display = 'none';
+        }
+    }
+    
+    var selected = select.options[select.selectedIndex];
+    if (selected && selected.style.display === 'none') {
+        select.selectedIndex = 0;
+    }
+}
+</script>
 {% endblock %}

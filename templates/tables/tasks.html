@@ -5,21 +5,60 @@
     <h1>✅ Tasks</h1>
     <button class="btn btn-primary" onclick="document.getElementById('addModal').classList.add('active')">+ Add Task</button>
 </div>
+
+<div style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap;">
+    <input type="text" id="searchTitle" placeholder="Search by title..." onkeyup="filterTasks()" style="padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid #0f3460; background: #0f3460; color: #e1e1e6; font-size: 1rem; min-width: 200px;">
+    <select id="filterState" onchange="filterTasks()" style="padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid #0f3460; background: #0f3460; color: #e1e1e6; font-size: 1rem;">
+        <option value="">All States</option>
+        {% for state in states %}
+        <option value="{{ state.task_state_id }}">{{ state.state }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+<!-- Hidden state color data -->
+<div style="display:none">
+    {% for state in states %}
+    <div class="state-color-data" data-id="{{ state.task_state_id }}" data-color="{{ state.color }}"></div>
+    {% endfor %}
+</div>
+
 <div class="card">
     <table>
-        <thead><tr><th>ID</th><th>Title</th><th>Description</th><th>Created</th><th>Deadline</th><th>Creator</th><th>State</th><th>Actions</th></tr></thead>
-        <tbody>
+        <thead><tr><th>ID</th><th>Title</th><th>Creator</th><th>Created</th><th>Deadline</th><th>State</th><th>Actions</th></tr></thead>
+        <tbody id="tasksTableBody">
             {% for task in tasks %}
-            <tr><td>{{ task.task_id }}</td><td>{{ task.title }}</td><td>{{ task.description[:50] }}...</td>
+            <tr class="task-row" data-state="{{ task.state }}" data-title="{{ task.title.lower() }}">
+                <td>{{ task.task_id }}</td>
+                <td class="task-title">{{ task.title }}</td>
+                <td>{{ task.creator_rel.name if task.creator_rel else task.creater }} {{ task.creator_rel.family_name if task.creator_rel else '' }}</td>
                 <td>{{ task.created_at.strftime('%Y-%m-%d %H:%M') if task.created_at else '-' }}</td>
                 <td>{{ task.dead_line.strftime('%Y-%m-%d %H:%M') if task.dead_line else '-' }}</td>
-                <td>{{ task.creater }}</td>
-                <td>{{ task.state_rel.state if task.state_rel else task.state }}</td>
-                <td><a href="{{ url_for('web_delete_task', id=task.task_id) }}" class="btn btn-danger" onclick="return confirm('Delete?')">Delete</a></td></tr>
+                <td>
+                    {% if task.state_rel %}
+                    <span class="state-badge" data-state-id="{{ task.state }}">{{ task.state_rel.state }}</span>
+                    {% else %}
+                    {{ task.state }}
+                    {% endif %}
+                </td>
+                <td>
+                    <button class="btn btn-success" onclick="openDetailsModal(this)" 
+                        data-id="{{ task.task_id }}"
+                        data-title="{{ task.title }}"
+                        data-desc="{{ task.description }}"
+                        data-created="{{ task.created_at.strftime('%Y-%m-%d %H:%M') if task.created_at else '-' }}"
+                        data-deadline="{{ task.dead_line.strftime('%Y-%m-%dT%H:%M') if task.dead_line else '' }}"
+                        data-creator="{{ task.creator_rel.name if task.creator_rel else task.creater }} {{ task.creator_rel.family_name if task.creator_rel else '' }}"
+                        data-state="{{ task.state }}">Details</button>
+                    <a href="{{ url_for('web_delete_task', id=task.task_id) }}" class="btn btn-danger" onclick="return confirm('Delete?')">Delete</a>
+                </td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
+<!-- ADD TASK MODAL -->
 <div id="addModal" class="modal">
     <div class="modal-content">
         <h2>Add Task</h2>
@@ -27,15 +66,93 @@
             <div class="form-group"><label>Title</label><input type="text" name="title" required></div>
             <div class="form-group"><label>Description</label><textarea name="description" required></textarea></div>
             <div class="form-group"><label>Deadline</label><input type="datetime-local" name="dead_line" required></div>
-            <div class="form-group"><label>Creator</label><select name="creater" required>
-                {% for user in users %}<<option value="{{ user.matricule }}">{{ user.name }} {{ user.family_name }}</option>{% endfor %}
-            </select></div>
-            <div class="form-group"><label>State</label><select name="state" required>
-                {% for state in states %}<<option value="{{ state.task_state_id }}">{{ state.state }}</option>{% endfor %}
-            </select></div>
+            <input type="hidden" name="creater" value="{{ session.get('user_matricule') }}">
+            <input type="hidden" name="state" value="1">
             <button type="submit" class="btn btn-success">Save</button>
             <button type="button" class="btn btn-primary" onclick="document.getElementById('addModal').classList.remove('active')">Cancel</button>
         </form>
     </div>
 </div>
+
+<!-- DETAILS/EDIT TASK MODAL -->
+<div id="detailsModal" class="modal">
+    <div class="modal-content">
+        <h2>Task Details</h2>
+        <form method="POST" action="{{ url_for('web_edit_task') }}">
+            <input type="hidden" name="task_id" id="detailTaskId">
+            <div class="form-group"><label>Title</label><input type="text" name="title" id="detailTitle" required></div>
+            <div class="form-group"><label>Description</label><textarea name="description" id="detailDescription" required></textarea></div>
+            <div class="form-group"><label>Deadline</label><input type="datetime-local" name="dead_line" id="detailDeadline" required></div>
+            <div class="form-group"><label>Creator</label><input type="text" id="detailCreator" readonly style="background: #0f3460; color: #a0a0a0;"></div>
+            <div class="form-group">
+                <label>State</label>
+                <select name="state" id="detailState" required>
+                    {% for state in states %}
+                    <option value="{{ state.task_state_id }}">{{ state.state }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-success">Update</button>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('detailsModal').classList.remove('active')">Cancel</button>
+        </form>
+    </div>
+</div>
+
+<script>
+// Build state color lookup from hidden HTML elements
+var stateColors = {};
+var colorData = document.getElementsByClassName('state-color-data');
+for (var i = 0; i < colorData.length; i++) {
+    var id = colorData[i].getAttribute('data-id');
+    var color = colorData[i].getAttribute('data-color');
+    stateColors[id] = color;
+}
+
+// Apply colors to all state badges
+var badges = document.querySelectorAll('.state-badge[data-state-id]');
+for (var j = 0; j < badges.length; j++) {
+    var stateId = badges[j].getAttribute('data-state-id');
+    var color = stateColors[stateId];
+    if (color) {
+        badges[j].style.backgroundColor = color;
+        badges[j].style.display = 'inline-block';
+        badges[j].style.padding = '0.25rem 0.75rem';
+        badges[j].style.borderRadius = '12px';
+        badges[j].style.fontSize = '0.85rem';
+        badges[j].style.fontWeight = '600';
+        badges[j].style.color = '#fff';
+        badges[j].style.textShadow = '0 1px 2px rgba(0,0,0,0.3)';
+    }
+}
+
+function openDetailsModal(btn) {
+    document.getElementById('detailTaskId').value = btn.getAttribute('data-id');
+    document.getElementById('detailTitle').value = btn.getAttribute('data-title');
+    document.getElementById('detailDescription').value = btn.getAttribute('data-desc');
+    document.getElementById('detailDeadline').value = btn.getAttribute('data-deadline');
+    document.getElementById('detailCreator').value = btn.getAttribute('data-creator');
+    document.getElementById('detailState').value = btn.getAttribute('data-state');
+    document.getElementById('detailsModal').classList.add('active');
+}
+
+function filterTasks() {
+    var searchTerm = document.getElementById('searchTitle').value.toLowerCase();
+    var stateFilter = document.getElementById('filterState').value;
+    var rows = document.getElementsByClassName('task-row');
+    
+    for (var i = 0; i < rows.length; i++) {
+        var title = rows[i].getAttribute('data-title');
+        var state = rows[i].getAttribute('data-state');
+        
+        var matchTitle = searchTerm === '' || title.indexOf(searchTerm) !== -1;
+        var matchState = stateFilter === '' || state === stateFilter;
+        
+        if (matchTitle && matchState) {
+            rows[i].style.display = '';
+        } else {
+            rows[i].style.display = 'none';
+        }
+    }
+}
+</script>
 {% endblock %}

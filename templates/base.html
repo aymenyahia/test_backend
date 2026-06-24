@@ -74,7 +74,7 @@
                 <div class="user-badge" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
                     <img src="{{ profile_pic if profile_pic is defined else '/static/uploads/profiles/default.png' }}" 
                          alt="" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
-                    <span>{{ session.get('user_name', 'Guest') }}</span>
+                    <span style="color: aliceblue;">{{ session.get('user_name', 'Guest') }}</span>
                     <span class="role">{{ session.get('user_role_name', 'Unknown') }}</span>
                 </div>
             </a>

@@ -52,6 +52,7 @@ class TaskState(db.Model):
     __tablename__ = 'task_states'
     task_state_id = db.Column(db.Integer, primary_key=True)
     state = db.Column(db.Text, nullable=False)
+    color = db.Column(db.Text, nullable=False)
 
 class ToDoTask(db.Model):
     __tablename__ = 'ToDo_task'

@@ -517,14 +517,37 @@ def web_delete_task(id):
     flash('Task deleted', 'success')
     return redirect(url_for('web_tasks'))
 
+@app.route('/web/tasks/edit', methods=['POST'])
+@manager_required
+def web_edit_task():
+    task = ToDoTask.query.get_or_404(request.form['task_id'])
+    task.title = request.form.get('title', task.title)
+    task.description = request.form.get('description', task.description)
+    task.dead_line = datetime.fromisoformat(request.form['dead_line']) if request.form.get('dead_line') else task.dead_line
+    task.state = request.form.get('state', task.state)
+    db.session.commit()
+    flash('Task updated', 'success')
+    return redirect(url_for('web_tasks'))
+
 # --- ASSIGNMENTS (Admin/Manager) ---
 @app.route('/web/assignments')
 @manager_required
 def web_assignments():
     assignments = Assignment.query.all()
     users = User.query.all()
-    tasks = ToDoTask.query.all()
-    return render_template('tables/assignments.html', assignments=assignments, users=users, tasks=tasks)
+    states = TaskState.query.all()
+    
+    current_user = get_current_user()
+    if current_user.user_role == ROLE_ADMIN:
+        tasks = ToDoTask.query.all()
+    else:
+        tasks = ToDoTask.query.filter_by(creater=current_user.matricule).all()
+    
+    return render_template('tables/assignments.html', 
+                         assignments=assignments, 
+                         users=users, 
+                         tasks=tasks,
+                         states=states)
 
 @app.route('/web/assignments/add', methods=['POST'])
 @manager_required
